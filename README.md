@@ -1,6 +1,6 @@
 ## What is HoopiPi?
 
-HoopiPi is an open-source, real-time audio processing engine designed specifically for guitar amplifier modeling using Neural Amp Modeler (NAM) technology. 
+HoopiPi is an open-source, real-time audio processing engine designed specifically for guitar amplifier modeling using Neural Amp Modeler (NAM) technology. All you need is a Raspberry Pi and an audio interface (USB, HifiBerry, PiSound, etc.).
 
 ### Key Highlights
 
