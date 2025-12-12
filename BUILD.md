@@ -40,6 +40,8 @@ sudo apt-get install -y \
 ```bash
 mkdir -p build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
+# OR if you want to build for better performance but slower compile times
+# cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_RTNEURAL=ON
 make -j4
 cd ..
 ```
