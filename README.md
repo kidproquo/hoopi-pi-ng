@@ -22,11 +22,11 @@ HoopiPi is an open-source, real-time audio processing engine designed specifical
        │
        ▼
 ┌──────────────────────────────────────────────────────┐
-│              Per-Channel Processing                   │
+│              Per-Channel Processing                  │
 ├──────────────────────────────────────────────────────┤
 │  1. Input Gain (-20 to +20 dB)                       │
 │  2. Noise Gate (per-channel, -60 to 0 dB threshold)  │
-│  3. Neural Amp Model (NAM WaveNet/LSTM)              │
+│  3. Neural Amp Model for the L channel               │
 │  4. 3-Band EQ (per-channel parametric)               │
 │     • Bass: 120 Hz (-20 to +20 dB)                   │
 │     • Mid: 750 Hz (-20 to +20 dB)                    │
@@ -36,7 +36,7 @@ HoopiPi is an open-source, real-time audio processing engine designed specifical
        │
        ▼
 ┌──────────────────────────────────────────────────────┐
-│           Stereo Effects (Post-Processing)            │
+│           Stereo Effects (Post-Processing)           │
 ├──────────────────────────────────────────────────────┤
 │  • FDN Reverb (Feedback Delay Network)               │
 │    - Room Size: 0.0 to 1.0                           │
@@ -46,7 +46,7 @@ HoopiPi is an open-source, real-time audio processing engine designed specifical
        │
        ▼
 ┌──────────────────────────────────────────────────────┐
-│              Recording & Playback                     │
+│              Recording & Playback                    │
 ├──────────────────────────────────────────────────────┤
 │  • WAV Recording (lossless, 48kHz)                   │
 │  • MP3 Backing Tracks (with position controls)       │
@@ -57,6 +57,8 @@ HoopiPi is an open-source, real-time audio processing engine designed specifical
 │ Audio Output │ ──► Headphones/Speakers/DAW
 └──────────────┘
 ```
+
+**Note**: NAM processing is only available for the L channel, due to the limited processing power on the RPi. The rest of the audio processing (gains, eq, noise gate) is available separately for each channel. 
 
 ---
 
