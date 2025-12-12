@@ -150,7 +150,7 @@ HoopiPi is distributed as a Debian package for one-command installation:
 sudo apt install --no-install-recommends ./hoopi-pi_1.0.0-XX_arm64_cortex-aXX.deb
 ```
 
-Builds are available for the Raspberry Pi 4 (_cortex-a72.deb) and the 3b+ (_cortex-a53.deb). The Cortex A72 build should work on the RPi 5. Please post a screenshot of the system performance dialog if you run it on hardware other than the RPi 4 or 3b+. Refer to [BUILD.md](BUILD.md) if you want to build a custom version for your device and please share the `deb` package, alongwith the performance screenshot. I would love to see this running on as many ARM devices as possible :-).
+Builds are available for the Raspberry Pi 4 (_cortex-a72.deb) and the 3b+ (_cortex-a53.deb). The Cortex A72 build should work on the RPi 5. Please post a screenshot of the system performance dialog if you run it on hardware other than the RPi 4 or 3b+, in the [discussions](https://github.com/kidproquo/hoopi-pi-ng/discussions) page. Refer to [BUILD.md](BUILD.md) if you want to build a custom version for your device and please share the `deb` package, alongwith the performance screenshot in the [discussions](https://github.com/kidproquo/hoopi-pi-ng/discussions) page. I would love to see this running on as many ARM devices as possible :-).
 
 Note: I was unable to build the optimized version (`-DBUILD_STATIC_RTNEURAL=ON`) on 3b+ due to the limited memory available. The non-optimized version took 2hrs to build! If you have a Cortex A53-based board with 2GB+ RAM, please try building HoopiPi and sharing the package.
 
@@ -190,8 +190,13 @@ HoopiPi stands on the shoulders of giants:
 - **Material-UI**: Professional component library
 - **Apache ECharts**: Performance visualization
 - **cpp-httplib**: Lightweight HTTP server
-
+ 
 *See [CREDITS.md](CREDITS.md) for complete attribution and licenses.*
+
+---
+
+## Comments? Feedback?
+https://github.com/kidproquo/hoopi-pi-ng/discussions
 
 ---
 
