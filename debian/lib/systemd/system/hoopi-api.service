@@ -1,0 +1,15 @@
+[Unit]
+Description=HoopiPi API Server (Web UI and REST API)
+After=hoopi-engine.service
+Wants=hoopi-engine.service
+# Wants instead of Requires for more flexible startup
+
+[Service]
+Type=simple
+WorkingDirectory=/home/prince/.local/share/hoopi-pi
+ExecStart=/usr/local/bin/HoopiPiAPI
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

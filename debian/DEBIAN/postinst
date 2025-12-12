@@ -1,0 +1,293 @@
+#!/bin/bash
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Get the user who invoked sudo (if any)
+if [ -n "$SUDO_USER" ]; then
+    REAL_USER="$SUDO_USER"
+else
+    REAL_USER="${USER:-$(whoami)}"
+fi
+REAL_HOME=$(eval echo ~"$REAL_USER")
+
+# Setup logging
+INSTALL_LOG="$REAL_HOME/.config/hoopi-pi/install.log"
+mkdir -p "$(dirname "$INSTALL_LOG")"
+
+# Function to log with timestamp
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$INSTALL_LOG"
+}
+
+# Function to log without timestamp (for display)
+log_info() {
+    echo -e "${BLUE}$1${NC}" | tee -a "$INSTALL_LOG"
+}
+
+log_success() {
+    echo -e "${GREEN}$1${NC}" | tee -a "$INSTALL_LOG"
+}
+
+# Start logging
+{
+    echo "========================================"
+    echo "HoopiPi Installation Log"
+    echo "========================================"
+    echo "Date: $(date)"
+    echo "User: $REAL_USER"
+    echo "Home: $REAL_HOME"
+    echo "Package Version: $(dpkg -l | grep hoopi-pi | awk '{print $3}')"
+    echo "========================================"
+    echo ""
+} > "$INSTALL_LOG"
+
+log_info "[HoopiPi] Post-installation configuration..."
+log_info "[HoopiPi] Configuring for user: $REAL_USER"
+log "[HoopiPi] Installation log: $INSTALL_LOG"
+
+# Add user to audio group for real-time priority
+if ! groups "$REAL_USER" | grep -q '\baudio\b'; then
+    log_info "[HoopiPi] Adding $REAL_USER to audio group..."
+    usermod -a -G audio "$REAL_USER" 2>&1 | tee -a "$INSTALL_LOG"
+    log_success "[HoopiPi] User added to audio group. You may need to log out and back in."
+else
+    log_success "[HoopiPi] User already in audio group."
+fi
+
+# Create HoopiPi directories
+log_info "[HoopiPi] Creating application directories..."
+mkdir -p "$REAL_HOME/.config/hoopi-pi" 2>&1 | tee -a "$INSTALL_LOG"
+mkdir -p "$REAL_HOME/.local/share/hoopi-pi/models" 2>&1 | tee -a "$INSTALL_LOG"
+mkdir -p "$REAL_HOME/.local/share/hoopi-pi/recordings" 2>&1 | tee -a "$INSTALL_LOG"
+mkdir -p "$REAL_HOME/.local/share/hoopi-pi/backing-tracks" 2>&1 | tee -a "$INSTALL_LOG"
+mkdir -p "$REAL_HOME/.local/share/hoopi-pi/web-ui" 2>&1 | tee -a "$INSTALL_LOG"
+log "  - $REAL_HOME/.config/hoopi-pi"
+log "  - $REAL_HOME/.local/share/hoopi-pi/models"
+log "  - $REAL_HOME/.local/share/hoopi-pi/recordings"
+log "  - $REAL_HOME/.local/share/hoopi-pi/backing-tracks"
+log "  - $REAL_HOME/.local/share/hoopi-pi/web-ui"
+
+# Copy web UI files from system installation
+if [ -d "/usr/local/share/hoopi-pi/web-ui" ]; then
+    log_info "[HoopiPi] Copying web UI files..."
+    cp -r /usr/local/share/hoopi-pi/web-ui/* "$REAL_HOME/.local/share/hoopi-pi/web-ui/" 2>&1 | tee -a "$INSTALL_LOG"
+fi
+
+# Copy any pre-installed models from system installation
+if [ -d "/usr/local/share/hoopi-pi/models" ] && [ "$(ls -A /usr/local/share/hoopi-pi/models 2>/dev/null)" ]; then
+    log_info "[HoopiPi] Copying pre-installed models..."
+    cp -r /usr/local/share/hoopi-pi/models/* "$REAL_HOME/.local/share/hoopi-pi/models/" 2>&1 | tee -a "$INSTALL_LOG" || true
+fi
+
+# Set proper ownership
+chown -R "$REAL_USER:$REAL_USER" "$REAL_HOME/.config/hoopi-pi" 2>&1 | tee -a "$INSTALL_LOG"
+chown -R "$REAL_USER:$REAL_USER" "$REAL_HOME/.local/share/hoopi-pi" 2>&1 | tee -a "$INSTALL_LOG"
+log "  Ownership set to $REAL_USER:$REAL_USER"
+
+# Function to detect and select audio device
+select_audio_device() {
+    log_info "[HoopiPi] Detecting audio devices..."
+
+    # Get list of audio devices, filtering out unwanted ones
+    local devices_info=$(aplay -l 2>/dev/null | grep "^card" | grep -v "bcm2835\|Headphones" || true)
+
+    if [ -z "$devices_info" ]; then
+        log_info "[HoopiPi] No suitable audio devices found. Using default hw:0"
+        echo "hw:0"
+        return
+    fi
+
+    # Parse devices into arrays
+    local -a card_nums
+    local -a card_names
+    local -a device_nums
+    local -a device_names
+
+    while IFS= read -r line; do
+        # Parse: card 1: Device [USB Audio Device], device 0: USB Audio [USB Audio]
+        if [[ $line =~ card\ ([0-9]+):\ ([^,]+),\ device\ ([0-9]+):\ (.+)\[(.+)\] ]]; then
+            card_nums+=("${BASH_REMATCH[1]}")
+            card_names+=("${BASH_REMATCH[2]}")
+            device_nums+=("${BASH_REMATCH[3]}")
+            device_names+=("${BASH_REMATCH[5]}")
+        fi
+    done <<< "$devices_info"
+
+    # If no devices found after parsing
+    if [ ${#card_nums[@]} -eq 0 ]; then
+        log_info "[HoopiPi] No suitable audio devices found. Using default hw:0"
+        echo "hw:0"
+        return
+    fi
+
+    # Display found devices
+    log_info "[HoopiPi] Found ${#card_nums[@]} audio device(s):"
+    for i in "${!card_nums[@]}"; do
+        log "  [$((i+1))] hw:${card_nums[$i]},${device_nums[$i]} - ${card_names[$i]} (${device_names[$i]})"
+    done
+
+    # Auto-select if only one device
+    if [ ${#card_nums[@]} -eq 1 ]; then
+        local selected="hw:${card_nums[0]},${device_nums[0]}"
+        log_success "[HoopiPi] Auto-selected: $selected - ${card_names[0]}"
+        echo "$selected"
+        return
+    fi
+
+    # Check if running interactively
+    if [ -t 0 ]; then
+        # Interactive selection
+        echo "" | tee -a "$INSTALL_LOG"
+        echo -e "${BLUE}Select audio device (1-${#card_nums[@]}):${NC}" | tee -a "$INSTALL_LOG"
+        read -r selection
+
+        # Validate selection
+        if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le ${#card_nums[@]} ]; then
+            local idx=$((selection - 1))
+            local selected="hw:${card_nums[$idx]},${device_nums[$idx]}"
+            log_success "[HoopiPi] Selected: $selected - ${card_names[$idx]}"
+            echo "$selected"
+            return
+        else
+            log_info "[HoopiPi] Invalid selection. Using first device."
+        fi
+    else
+        log_info "[HoopiPi] Non-interactive mode. Auto-selecting first device."
+    fi
+
+    # Default to first device
+    local selected="hw:${card_nums[0]},${device_nums[0]}"
+    log_success "[HoopiPi] Using: $selected - ${card_names[0]}"
+    echo "$selected"
+}
+
+# Configure JACK settings for the user
+log_info "[HoopiPi] Configuring JACK audio server..."
+JACK_CONFIG="$REAL_HOME/.jackdrc"
+
+# Check if JACK config already exists
+if [ -f "$JACK_CONFIG" ]; then
+    log_success "[HoopiPi] JACK configuration already exists at $JACK_CONFIG"
+    log_info "[HoopiPi] Using existing JACK configuration:"
+    cat "$JACK_CONFIG" | tee -a "$INSTALL_LOG"
+else
+    # Detect and select audio device
+    AUDIO_DEVICE=$(select_audio_device)
+
+    log_info "[HoopiPi] Creating JACK configuration..."
+    cat > "$JACK_CONFIG" << EOF
+/usr/bin/jackd -dalsa -d${AUDIO_DEVICE} -r48000 -p128 -n2
+EOF
+    chown "$REAL_USER:$REAL_USER" "$JACK_CONFIG"
+    log_success "[HoopiPi] JACK configuration created at $JACK_CONFIG"
+    log "  Configuration: /usr/bin/jackd -dalsa -d${AUDIO_DEVICE} -r48000 -p128 -n2"
+    log_info "[HoopiPi] You can edit this file to configure your audio device."
+fi
+
+# Check if JACK is currently running
+if pgrep -u "$REAL_USER" jackd > /dev/null; then
+    log_info "[HoopiPi] JACK is already running."
+    log_info "[HoopiPi] The hoopi-jack service will use your existing configuration."
+    log_info "[HoopiPi] To use HoopiPi's JACK service, you may need to stop existing JACK:"
+    log "  killall jackd"
+    log "  systemctl --user start hoopi-jack"
+fi
+
+# Create systemd user service directory
+SYSTEMD_USER_DIR="$REAL_HOME/.config/systemd/user"
+log_info "[HoopiPi] Creating systemd user directory..."
+mkdir -p "$SYSTEMD_USER_DIR" 2>&1 | tee -a "$INSTALL_LOG"
+chown -R "$REAL_USER:$REAL_USER" "$REAL_HOME/.config/systemd" 2>&1 | tee -a "$INSTALL_LOG"
+log "  Created: $SYSTEMD_USER_DIR"
+
+# Copy and enable systemd services for the user
+log_info "[HoopiPi] Installing systemd services..."
+
+# Enable lingering for the user (allows services to run without login)
+log "  Enabling user lingering..."
+loginctl enable-linger "$REAL_USER" 2>&1 | tee -a "$INSTALL_LOG" || true
+
+# Copy service files to user systemd directory
+log "  Copying service files..."
+cp /lib/systemd/system/hoopi-jack.service "$SYSTEMD_USER_DIR/" 2>&1 | tee -a "$INSTALL_LOG"
+cp /lib/systemd/system/hoopi-engine.service "$SYSTEMD_USER_DIR/" 2>&1 | tee -a "$INSTALL_LOG"
+cp /lib/systemd/system/hoopi-api.service "$SYSTEMD_USER_DIR/" 2>&1 | tee -a "$INSTALL_LOG"
+
+# Update service files with correct user paths
+log "  Updating service paths for user: $REAL_USER"
+sed -i "s|/home/[^/]*/|$REAL_HOME/|g" "$SYSTEMD_USER_DIR/hoopi-jack.service"
+sed -i "s|/home/[^/]*/|$REAL_HOME/|g" "$SYSTEMD_USER_DIR/hoopi-engine.service"
+sed -i "s|/home/[^/]*/|$REAL_HOME/|g" "$SYSTEMD_USER_DIR/hoopi-api.service"
+
+chown -R "$REAL_USER:$REAL_USER" "$SYSTEMD_USER_DIR"
+
+# Reload systemd daemon for the user
+log "  Reloading systemd daemon..."
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user daemon-reload 2>&1 | tee -a "$INSTALL_LOG"
+
+# Enable services
+log_info "[HoopiPi] Enabling services..."
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user enable hoopi-jack.service 2>&1 | tee -a "$INSTALL_LOG"
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user enable hoopi-engine.service 2>&1 | tee -a "$INSTALL_LOG"
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user enable hoopi-api.service 2>&1 | tee -a "$INSTALL_LOG"
+log "  Services enabled: hoopi-jack, hoopi-engine, hoopi-api"
+
+# Start services
+log_info "[HoopiPi] Starting services..."
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user start hoopi-jack.service 2>&1 | tee -a "$INSTALL_LOG"
+sleep 2  # Wait for JACK to start
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user start hoopi-engine.service 2>&1 | tee -a "$INSTALL_LOG"
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user start hoopi-api.service 2>&1 | tee -a "$INSTALL_LOG"
+log_success "  Services started: hoopi-jack, hoopi-engine, hoopi-api"
+
+# Installation summary
+{
+    echo ""
+    echo "========================================"
+    echo "Installation Summary"
+    echo "========================================"
+    echo "Status: SUCCESS"
+    echo "User: $REAL_USER"
+    echo "Config Directory: $REAL_HOME/.config/hoopi-pi"
+    echo "Data Directory: $REAL_HOME/.local/share/hoopi-pi"
+    echo "JACK Config: $JACK_CONFIG"
+    echo "Systemd Services: $SYSTEMD_USER_DIR"
+    echo "Installation Log: $INSTALL_LOG"
+    echo "========================================"
+    echo ""
+} | tee -a "$INSTALL_LOG"
+
+# Set ownership of install log
+chown "$REAL_USER:$REAL_USER" "$INSTALL_LOG"
+
+log_success "[HoopiPi] Installation complete!"
+log_info "[HoopiPi] Services are now running!"
+log ""
+log_info "[HoopiPi] Access web UI:"
+
+# Get all LAN IP addresses (excluding loopback)
+LAN_IPS=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '^127\.' || echo "")
+
+if [ -n "$LAN_IPS" ]; then
+    while IFS= read -r ip; do
+        log "  http://$ip:11995"
+    done <<< "$LAN_IPS"
+else
+    log "  http://localhost:11995"
+fi
+
+log ""
+log_info "[HoopiPi] Optional configuration:"
+log "  - Configure audio device: ~/.jackdrc"
+log "  - View service status: systemctl --user status hoopi-jack hoopi-engine hoopi-api"
+log "  - View logs: journalctl --user -u hoopi-jack -f"
+log "  - Run diagnostic: hoopi-check-jack"
+log "  - Installation log: $INSTALL_LOG"
+log ""
+log_info "[HoopiPi] Note: If audio group was just added, log out and back in for full access."
+
+exit 0

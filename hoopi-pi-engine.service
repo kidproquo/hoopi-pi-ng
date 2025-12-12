@@ -1,0 +1,26 @@
+[Unit]
+Description=HoopiPi Neural Audio Engine (JACK)
+After=network.target jack.service
+Requires=jack.service
+
+[Service]
+Type=simple
+User=prince
+WorkingDirectory=/home/prince/dev/hoopi-pi/build/standalone
+ExecStart=/home/prince/dev/hoopi-pi/build/standalone/HoopiPi
+Restart=on-failure
+RestartSec=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Audio realtime priority
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+
+# Environment
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+
+[Install]
+WantedBy=multi-user.target

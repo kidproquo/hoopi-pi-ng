@@ -1,0 +1,14 @@
+[Unit]
+Description=JACK Audio Server for HoopiPi
+After=sound.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'exec $(cat ~/.jackdrc)'
+Restart=on-failure
+RestartSec=5
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=default.target

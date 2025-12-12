@@ -1,0 +1,24 @@
+[Unit]
+Description=HoopiPi Audio Processing Engine
+After=hoopi-jack.service
+Wants=hoopi-jack.service
+# Wants instead of Requires allows engine to work with external JACK
+# Build metadata (injected by build-deb.sh)
+X-HoopiPi-Version=1.0.0-19
+X-HoopiPi-PackageName=hoopi-pi_1.0.0-19_arm64_cortex-a72.deb
+X-HoopiPi-BuildDate=2025-12-11 22:11:34 UTC
+X-HoopiPi-Architecture=arm64
+X-HoopiPi-CPU=cortex-a72
+X-HoopiPi-BuildFlags=Release -O3 -DNDEBUG -DBUILD_STATIC_RTNEURAL=ON
+
+[Service]
+Type=simple
+WorkingDirectory=/home/prince/.local/share/hoopi-pi
+ExecStart=/usr/local/bin/HoopiPi
+Restart=always
+RestartSec=3
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=default.target

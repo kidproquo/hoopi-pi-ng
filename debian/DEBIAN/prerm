@@ -1,0 +1,59 @@
+#!/bin/bash
+set -e
+
+# Get the user who invoked sudo (if any)
+if [ -n "$SUDO_USER" ]; then
+    REAL_USER="$SUDO_USER"
+else
+    REAL_USER="${USER:-$(whoami)}"
+fi
+REAL_HOME=$(eval echo ~"$REAL_USER")
+
+# Setup uninstall logging
+UNINSTALL_LOG="$REAL_HOME/.config/hoopi-pi/uninstall.log"
+
+# Function to log with timestamp
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$UNINSTALL_LOG"
+}
+
+# Start logging
+{
+    echo "========================================"
+    echo "HoopiPi Uninstallation Log"
+    echo "========================================"
+    echo "Date: $(date)"
+    echo "User: $REAL_USER"
+    echo "========================================"
+    echo ""
+} > "$UNINSTALL_LOG"
+
+log "[HoopiPi] Stopping and disabling services..."
+
+# Stop services
+log "  Stopping hoopi-api..."
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user stop hoopi-api.service 2>&1 | tee -a "$UNINSTALL_LOG" || true
+
+log "  Stopping hoopi-engine..."
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user stop hoopi-engine.service 2>&1 | tee -a "$UNINSTALL_LOG" || true
+
+log "  Stopping hoopi-jack..."
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user stop hoopi-jack.service 2>&1 | tee -a "$UNINSTALL_LOG" || true
+
+# Disable services
+log "  Disabling services..."
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user disable hoopi-api.service 2>&1 | tee -a "$UNINSTALL_LOG" || true
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user disable hoopi-engine.service 2>&1 | tee -a "$UNINSTALL_LOG" || true
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER)" systemctl --user disable hoopi-jack.service 2>&1 | tee -a "$UNINSTALL_LOG" || true
+
+log "[HoopiPi] Services stopped and disabled."
+log "[HoopiPi] Uninstall log saved to: $UNINSTALL_LOG"
+log "[HoopiPi] Note: Configuration and data directories preserved at:"
+log "  - $REAL_HOME/.config/hoopi-pi"
+log "  - $REAL_HOME/.local/share/hoopi-pi"
+log "  To remove completely, delete these directories manually."
+
+# Set ownership of uninstall log
+chown "$REAL_USER:$REAL_USER" "$UNINSTALL_LOG"
+
+exit 0

@@ -1,0 +1,17 @@
+Package: hoopi-pi
+Version: 1.0.0-19
+Section: sound
+Priority: optional
+Architecture: arm64
+Depends: jackd2, libasound2, libjack-jackd2-0, libsndfile1, libmpg123-0, alsa-utils
+Maintainer: Prince Samuel <prince.samuel@gmail.com>
+Description: Real-time guitar amp processor with Neural Amp Modeler
+ HoopiPi is a real-time neural network audio processor for guitar amp
+ modeling. Features include:
+ - Neural Amp Modeler (NAM) WaveNet and LSTM model support
+ - Per-channel effects processing (gain, noise gate, EQ)
+ - Stereo processing modes (True Stereo, Stereo2Mono, Mono2Stereo)
+ - FDN reverb with configurable room size and decay
+ - Low-latency JACK audio backend
+ - Web-based UI for parameter control
+ - Recording and playback capabilities

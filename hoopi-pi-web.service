@@ -1,0 +1,22 @@
+[Unit]
+Description=HoopiPi Web API Server
+After=network.target hoopi-pi-engine.service
+Requires=hoopi-pi-engine.service
+
+[Service]
+Type=simple
+User=prince
+WorkingDirectory=/home/prince/dev/hoopi-pi/build/api-server
+ExecStart=/home/prince/dev/hoopi-pi/build/api-server/HoopiPiAPI
+Restart=on-failure
+RestartSec=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Environment
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+
+[Install]
+WantedBy=multi-user.target
