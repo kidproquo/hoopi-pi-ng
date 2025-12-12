@@ -119,8 +119,6 @@ Practice and perform with your favorite tracks:
 ---
 
 
-
-
 <img width="768" height="854" alt="image" src="https://github.com/user-attachments/assets/a595b0bf-9e7c-4c67-a2de-e3d89bc174bc" />
 
 ### Performance
@@ -150,6 +148,11 @@ HoopiPi is distributed as a Debian package for one-command installation:
 sudo apt install --no-install-recommends ./hoopi-pi_1.0.0-XX_arm64_cortex-aXX.deb
 ```
 
+Builds are available for the Raspberry Pi 4 (_cortex-a72.deb) and the 3b+ (_cortex-a53.deb). The Cortex A72 build should work on the RPi 5. Please post a screenshot of the system performance dialog if you run it on hardware other than the RPi 4 or 3b+. Refer to [BUILD.md](BUILD.md) if you want to build a custom version for your device and please share the `deb` package, alongwith the performance screenshot. I would love to see this running on as many ARM devices as possible :-).
+
+Note: I was unable to build the optimized version (`-DBUILD_STATIC_RTNEURAL=ON`) on 3b+ due to the limited memory available. The non-optimized version took 2hrs to build! If you have a Cortex A53-based board with 2GB+ RAM, please try building HoopiPi and sharing the package.
+
+
 **What Gets Installed:**
 - ✅ HoopiPi audio engine and API server
 - ✅ JACK audio server with automatic configuration
@@ -170,7 +173,7 @@ sudo apt install --no-install-recommends ./hoopi-pi_1.0.0-XX_arm64_cortex-aXX.de
 HoopiPi stands on the shoulders of giants:
 
 ### Core Technology
-- **NeuralAudio**: Real-time neural audio processing framework
+- [**NeuralAudio**](https://github.com/mikeoliphant/NeuralAudio/): Real-time neural audio processing framework
 - **Neural Amp Modeler Core**: Industry-standard amp modeling
 - **RTNeural**: Optimized neural network inference
 - **Signalsmith Audio DSP**: Professional DSP algorithms and reverb
