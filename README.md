@@ -1,6 +1,13 @@
-# HoopiPi Debian Package
+<img width="768" height="854" alt="image" src="https://github.com/user-attachments/assets/a595b0bf-9e7c-4c67-a2de-e3d89bc174bc" />
+<img width="810" height="592" alt="image" src="https://github.com/user-attachments/assets/4e210483-1147-4544-842d-439b411fb89d" />
+<img width="403" height="866" alt="image" src="https://github.com/user-attachments/assets/812eb410-f479-4474-8a21-aa24e6cbe61d" />
 
-This directory contains the Debian package structure for HoopiPi.
+<img width="608" height="430" alt="image" src="https://github.com/user-attachments/assets/36fdb616-0291-4c13-b999-816e175f8e0a" />
+
+
+
+
+# HoopiPi Debian Package
 
 ## Building the Package
 
