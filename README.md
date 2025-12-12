@@ -58,6 +58,69 @@ HoopiPi is an open-source, real-time audio processing engine designed specifical
 └──────────────┘
 ```
 
+---
+
+## Effects
+
+### Noise Gate
+- **Per-channel control** in True Stereo mode
+- Threshold range: -60 to 0 dB (1 dB steps)
+- Eliminates unwanted noise without affecting your tone
+
+### 3-Band Parametric EQ
+- **Per-channel processing** in True Stereo mode
+- Fixed frequency centers optimized for guitar:
+  - **Bass**: 120 Hz
+  - **Mid**: 750 Hz
+  - **Treble**: 3 kHz
+- Range: -20 to +20 dB (0.5 dB steps)
+
+### Algorithmic Reverb
+
+HoopiPi features a high-quality **Feedback Delay Network (FDN)** reverb based on [Signalsmith Audio's reverb algorithm](https://signalsmith-audio.co.uk/writing/2021/lets-write-a-reverb/).
+
+- **Room Size**: From tight spaces to vast halls
+- **Decay Time**: Control how long the reverb tail lasts
+- **Wet/Dry Mix**: Blend reverb seamlessly with your dry signal
+- Smooth, natural-sounding ambience
+
+*Credits: Reverb algorithm by Geraint Luff / Signalsmith Audio (MIT License)*
+
+---
+
+## Recording & Backing Tracks
+
+### Multi-Track Recording
+
+Record your performances directly to lossless WAV files:
+
+- **48kHz, 16-bit WAV** format (CD quality)
+- Records full processed signal (with all effects)
+- Optional backing track inclusion
+- Recordings saved to user directory
+- Download recordings through web interface
+- Delete recordings when no longer needed
+
+### MP3 Backing Track Support
+
+Practice and perform with your favorite tracks:
+
+- **MP3 playback** with high-quality decoding (libmpg123)
+- Upload backing tracks via web interface
+- Playback controls: Play, Pause, Stop
+- **Position controls**:
+  - Visual progress bar
+  - Seek to any position
+  - Set loop start/end points
+  - Loop playback mode
+- Volume control (0-100%)
+- Include or exclude backing track from recordings
+
+---
+
+
+
+
 <img width="768" height="854" alt="image" src="https://github.com/user-attachments/assets/a595b0bf-9e7c-4c67-a2de-e3d89bc174bc" />
 
 ### Performance
@@ -99,6 +162,31 @@ sudo apt install --no-install-recommends ./hoopi-pi_1.0.0-XX_arm64_cortex-aXX.de
 - Services start automatically
 - Access web UI at `http://YOUR_PI_IP:11995`
 - Upload your first NAM model and start playing!
+
+---
+
+## 🌟 Built on Open Source
+
+HoopiPi stands on the shoulders of giants:
+
+### Core Technology
+- **NeuralAudio**: Real-time neural audio processing framework
+- **Neural Amp Modeler Core**: Industry-standard amp modeling
+- **RTNeural**: Optimized neural network inference
+- **Signalsmith Audio DSP**: Professional DSP algorithms and reverb
+
+### Audio Infrastructure
+- **JACK Audio Connection Kit**: Professional low-latency audio routing
+- **libsndfile**: High-quality audio file I/O
+- **libmpg123**: Fast MP3 decoding
+
+### Web Stack
+- **React**: Modern UI framework
+- **Material-UI**: Professional component library
+- **Apache ECharts**: Performance visualization
+- **cpp-httplib**: Lightweight HTTP server
+
+*See [CREDITS.md](CREDITS.md) for complete attribution and licenses.*
 
 ---
 
